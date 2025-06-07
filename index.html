@@ -22,952 +22,959 @@
         const Plus = () => <span>+</span>;
         const Car = () => <span>🚗</span>;
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Car, Users, Calendar, Clock, CheckCircle, XCircle, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+        const BookingSystem = () => {
+          // Configuration
+          const vehicleLimits = {
+            'C+E': 4,
+            'C': 2,
+            'B-Manual': 2,
+            'B-Auto': 1,
+            'D': 1,
+            'D1': 1,
+            'C1': 1,
+            'B+E': 2
+          };
 
-const BookingSystem = () => {
-  // Configuration
-  const vehicleLimits = {
-    'C+E': 4,
-    'C': 2,
-    'B-Manual': 2,
-    'B-Auto': 1,
-    'D': 1,
-    'D1': 1,
-    'C1': 1,
-    'B+E': 2
-  };
+          const instructorQualifications = {
+            'WOLF': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
+            'NIGEL': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'ipaf', 'forklift'],
+            'TREVOR': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
+            'DEAN': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E', 'forklift'],
+            'JOHN': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E'],
+            'GRAY': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
+            'JEFF': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'adr'],
+            'DJ': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
+            'BA': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
+            'DAVE J': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'ipaf', 'adr'],
+            'CRAIG': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E', 'adr']
+          };
 
-  const instructorQualifications = {
-    'WOLF': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
-    'NIGEL': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'ipaf', 'forklift'],
-    'TREVOR': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
-    'DEAN': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E', 'forklift'],
-    'JOHN': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E'],
-    'GRAY': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
-    'JEFF': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'adr'],
-    'DJ': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
-    'BA': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E'],
-    'DAVE J': ['C+E', 'C', 'C1', 'D', 'D1', 'B+E', 'ipaf', 'adr'],
-    'CRAIG': ['B-Manual', 'B-Auto', 'C+E', 'C', 'C1', 'B+E', 'adr']
-  };
+          // Time blocks (4 per day)
+          const timeBlocks = [
+            { id: 1, label: 'Block 1', defaultStart: '08:15', defaultEnd: '09:45' },
+            { id: 2, label: 'Block 2', defaultStart: '10:15', defaultEnd: '11:45' },
+            { id: 3, label: 'Block 3', defaultStart: '12:45', defaultEnd: '14:15' },
+            { id: 4, label: 'Block 4', defaultStart: '14:45', defaultEnd: '16:15' }
+          ];
 
-  // Time blocks (4 per day)
-  const timeBlocks = [
-    { id: 1, label: 'Block 1', defaultStart: '08:15', defaultEnd: '09:45' },
-    { id: 2, label: 'Block 2', defaultStart: '10:15', defaultEnd: '11:45' },
-    { id: 3, label: 'Block 3', defaultStart: '12:45', defaultEnd: '14:15' },
-    { id: 4, label: 'Block 4', defaultStart: '14:45', defaultEnd: '16:15' }
-  ];
+          const bookingTypes = {
+            lesson: { label: 'Driving Lesson', color: 'bg-blue-50 border-blue-200 text-blue-800', defaultDuration: 1, requiresVehicle: true },
+            test: { label: 'Assessment/Test', color: 'bg-red-50 border-red-200 text-red-800', defaultDuration: 1, requiresVehicle: true },
+            course: { label: 'Training Course', color: 'bg-purple-50 border-purple-200 text-purple-800', defaultDuration: 4, requiresVehicle: true },
+            admin: { label: 'Admin', color: 'bg-gray-50 border-gray-200 text-gray-800', defaultDuration: 1, requiresVehicle: false },
+            leave: { label: 'Annual Leave', color: 'bg-yellow-50 border-yellow-200 text-yellow-800', defaultDuration: 4, requiresVehicle: false, multiDay: true },
+            ipaf: { label: 'IPAF (1-day)', color: 'bg-purple-50 border-purple-200 text-purple-800', defaultDuration: 4, requiresVehicle: false },
+            forklift: { label: 'Forklift', color: 'bg-orange-50 border-orange-200 text-orange-800', defaultDuration: 2, requiresVehicle: false },
+            adr: { label: 'ADR (5-day)', color: 'bg-green-50 border-green-200 text-green-800', defaultDuration: 4, requiresVehicle: false, multiDay: true, days: 5 }
+          };
 
-  const bookingTypes = {
-    lesson: { label: 'Driving Lesson', color: 'bg-blue-50 border-blue-200 text-blue-800', defaultDuration: 1, requiresVehicle: true },
-    test: { label: 'Assessment/Test', color: 'bg-red-50 border-red-200 text-red-800', defaultDuration: 1, requiresVehicle: true },
-    course: { label: 'Training Course', color: 'bg-purple-50 border-purple-200 text-purple-800', defaultDuration: 4, requiresVehicle: true },
-    admin: { label: 'Admin', color: 'bg-gray-50 border-gray-200 text-gray-800', defaultDuration: 1, requiresVehicle: false },
-    leave: { label: 'Annual Leave', color: 'bg-yellow-50 border-yellow-200 text-yellow-800', defaultDuration: 4, requiresVehicle: false, multiDay: true },
-    ipaf: { label: 'IPAF (1-day)', color: 'bg-purple-50 border-purple-200 text-purple-800', defaultDuration: 4, requiresVehicle: false },
-    forklift: { label: 'Forklift', color: 'bg-orange-50 border-orange-200 text-orange-800', defaultDuration: 2, requiresVehicle: false },
-    adr: { label: 'ADR (5-day)', color: 'bg-green-50 border-green-200 text-green-800', defaultDuration: 4, requiresVehicle: false, multiDay: true, days: 5 }
-  };
+          const bookingStatuses = {
+            confirmed: { label: 'Confirmed', color: '' },
+            cancelled: { label: 'Cancelled', color: 'opacity-60 line-through bg-gray-100 border-gray-300' }
+          };
 
-  const bookingStatuses = {
-    confirmed: { label: 'Confirmed', color: '' },
-    cancelled: { label: 'Cancelled', color: 'opacity-60 line-through bg-gray-100 border-gray-300' }
-  };
+          // Common time presets
+          const timePresets = {
+            lesson: [
+              { start: '08:15', end: '09:45' },
+              { start: '10:15', end: '11:45' },
+              { start: '12:45', end: '14:15' },
+              { start: '14:45', end: '16:15' }
+            ],
+            assessment: [
+              { start: '08:00', end: '09:30' },
+              { start: '10:00', end: '11:30' },
+              { start: '12:30', end: '14:00' },
+              { start: '14:30', end: '16:00' }
+            ],
+            course: [
+              { start: '08:00', end: '16:00' }
+            ]
+          };
 
-  // Common time presets
-  const timePresets = {
-    lesson: [
-      { start: '08:15', end: '09:45' },
-      { start: '10:15', end: '11:45' },
-      { start: '12:45', end: '14:15' },
-      { start: '14:45', end: '16:15' }
-    ],
-    assessment: [
-      { start: '08:00', end: '09:30' },
-      { start: '10:00', end: '11:30' },
-      { start: '12:30', end: '14:00' },
-      { start: '14:30', end: '16:00' }
-    ],
-    course: [
-      { start: '08:00', end: '16:00' }
-    ]
-  };
+          // State
+          const [currentDate, setCurrentDate] = React.useState(new Date());
+          const [bookings, setBookings] = React.useState({});
+          const [selectedSlot, setSelectedSlot] = React.useState(null);
+          const [showModal, setShowModal] = React.useState(false);
+          const [editingBooking, setEditingBooking] = React.useState(null);
+          const [showBookingDetails, setShowBookingDetails] = React.useState(false);
+          const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
-  // State
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [bookings, setBookings] = useState({});
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [editingBooking, setEditingBooking] = useState(null);
-  const [showBookingDetails, setShowBookingDetails] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+          // Helper functions
+          const formatDate = (date) => {
+            return date.toISOString().split('T')[0];
+          };
 
-  // Helper functions
-  const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
-  };
+          const getDateString = () => {
+            return formatDate(currentDate);
+          };
 
-  const getDateString = () => {
-    return formatDate(currentDate);
-  };
+          const getVehicleColor = (vehicleType) => {
+            if (vehicleType === 'C+E') return 'bg-blue-100 border-blue-300'; // Artics in blue
+            if (vehicleType === 'C') return 'bg-red-100 border-red-300'; // Rigids in red
+            if (vehicleType.includes('B')) return 'bg-green-100 border-green-300'; // Cars in green
+            return 'bg-gray-100 border-gray-300'; // Everything else in black/gray
+          };
 
-  const getVehicleColor = (vehicleType) => {
-    if (vehicleType === 'C+E') return 'bg-blue-100 border-blue-300'; // Artics in blue
-    if (vehicleType === 'C') return 'bg-red-100 border-red-300'; // Rigids in red
-    if (vehicleType.includes('B')) return 'bg-green-100 border-green-300'; // Cars in green
-    return 'bg-gray-100 border-gray-300'; // Everything else in black/gray
-  };
+          // Calculate which blocks a booking spans
+          const getBlocksSpanned = (startTime, endTime, duration, startBlock = 1) => {
+            const blocks = [];
+            for (let i = 0; i < duration; i++) {
+              const blockNum = startBlock + i;
+              if (blockNum <= 4) { // Maximum 4 blocks per day
+                blocks.push(blockNum);
+              }
+            }
+            return blocks;
+          };
 
-  // Calculate which blocks a booking spans
-  const getBlocksSpanned = (startTime, endTime, duration, startBlock = 1) => {
-    const blocks = [];
-    for (let i = 0; i < duration; i++) {
-      const blockNum = startBlock + i;
-      if (blockNum <= 4) { // Maximum 4 blocks per day
-        blocks.push(blockNum);
-      }
-    }
-    return blocks;
-  };
+          // Check if instructor is available for the requested blocks
+          const isInstructorAvailable = (instructor, date, blocks, excludeBookingId = null) => {
+            const dayBookings = Object.values(bookings).filter(
+              booking => booking.instructor === instructor && 
+                         booking.date === date && 
+                         booking.id !== excludeBookingId &&
+                         booking.status !== 'cancelled'
+            );
 
-  // Check if instructor is available for the requested blocks
-  const isInstructorAvailable = (instructor, date, blocks, excludeBookingId = null) => {
-    const dayBookings = Object.values(bookings).filter(
-      booking => booking.instructor === instructor && 
-                 booking.date === date && 
-                 booking.id !== excludeBookingId &&
-                 booking.status !== 'cancelled'
-    );
+            // Check if any existing booking conflicts with requested blocks
+            return !dayBookings.some(booking => {
+              const startBlock = booking.startBlock || 1;
+              const existingBlocks = getBlocksSpanned(booking.startTime, booking.endTime, booking.duration, startBlock);
+              return blocks.some(block => existingBlocks.includes(block));
+            });
+          };
 
-    // Check if any existing booking conflicts with requested blocks
-    return !dayBookings.some(booking => {
-      const startBlock = booking.startBlock || 1;
-      const existingBlocks = getBlocksSpanned(booking.startTime, booking.endTime, booking.duration, startBlock);
-      return blocks.some(block => existingBlocks.includes(block));
-    });
-  };
-
-  const canInstructorTeach = (instructor, vehicleType, bookingType) => {
-    const bookingConfig = bookingTypes[bookingType];
-    
-    // Non-vehicle bookings have different requirements
-    if (!bookingConfig.requiresVehicle) {
-      if (bookingType === 'leave' || bookingType === 'admin') return true;
-      if (bookingType === 'ipaf' && !['DAVE J', 'NIGEL'].includes(instructor)) return false;
-      if (bookingType === 'forklift' && !['NIGEL', 'DEAN'].includes(instructor)) return false;
-      if (bookingType === 'adr' && !['CRAIG', 'JEFF', 'DAVE J'].includes(instructor)) return false;
-      return true;
-    }
-    
-    // Vehicle-based bookings
-    const qualifications = instructorQualifications[instructor] || [];
-    return qualifications.includes(vehicleType);
-  };
-
-  // Get bookings for a specific instructor and block
-  const getBookingForBlock = (instructor, date, block) => {
-    return Object.values(bookings).find(booking => {
-      if (booking.instructor !== instructor || booking.date !== date) return false;
-      const startBlock = booking.startBlock || 1;
-      const blocks = getBlocksSpanned(booking.startTime, booking.endTime, booking.duration, startBlock);
-      return blocks.includes(block);
-    });
-  };
-
-  // Helper function to get vehicle availability for a specific block
-  const getVehicleAvailability = (vehicleType, date, block) => {
-    const blockBookings = Object.values(bookings).filter(
-      b => b.date === date && 
-           b.status !== 'cancelled' &&
-           b.vehicleType === vehicleType &&
-           getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
-    );
-    const used = blockBookings.length;
-    const total = vehicleLimits[vehicleType];
-    return { used, total, available: total - used };
-  };
-
-  // Booking functions
-  const addBooking = (bookingData) => {
-    const bookingConfig = bookingTypes[bookingData.bookingType];
-    const startBlock = selectedSlot.block || 1; // Use the clicked block as starting point
-    const blocks = getBlocksSpanned(bookingData.startTime, bookingData.endTime, bookingData.duration, startBlock);
-    
-    // For non-vehicle bookings, skip vehicle checks
-    if (bookingConfig.requiresVehicle) {
-      // Check vehicle availability across all affected blocks
-      const hasVehicleConflict = blocks.some(block => {
-        const blockBookings = Object.values(bookings).filter(
-          b => b.date === selectedSlot.date && 
-               b.status !== 'cancelled' &&
-               b.vehicleType === bookingData.vehicleType && // Only count bookings with the same vehicle type
-               getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
-        );
-        const vehicleCount = blockBookings.length;
-        
-        console.log(`Block ${block}: Found ${vehicleCount} ${bookingData.vehicleType} bookings, limit is ${vehicleLimits[bookingData.vehicleType]}`);
-        
-        return vehicleCount >= vehicleLimits[bookingData.vehicleType];
-      });
-
-      if (hasVehicleConflict) {
-        alert(`No ${bookingData.vehicleType} vehicles available for the requested time slots`);
-        return;
-      }
-    }
-
-    if (!canInstructorTeach(selectedSlot.instructor, bookingData.vehicleType, bookingData.bookingType)) {
-      const message = bookingConfig.requiresVehicle 
-        ? `${selectedSlot.instructor} cannot teach ${bookingData.vehicleType}`
-        : `${selectedSlot.instructor} is not qualified for ${bookingConfig.label}`;
-      alert(message);
-      return;
-    }
-
-    // Handle multi-day bookings
-    if (bookingConfig.multiDay && bookingConfig.days) {
-      // For multi-day bookings like ADR (5 days)
-      const startDate = new Date(selectedSlot.date);
-      const newBookings = {};
-      
-      for (let day = 0; day < bookingConfig.days; day++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + day);
-        const dateString = formatDate(currentDate);
-        
-        // Check instructor availability for each day
-        if (!isInstructorAvailable(selectedSlot.instructor, dateString, blocks)) {
-          alert(`${selectedSlot.instructor} is not available on ${dateString}`);
-          return;
-        }
-        
-        const dayBooking = {
-          id: `${Date.now()}-day${day}`,
-          instructor: selectedSlot.instructor,
-          date: dateString,
-          startBlock: startBlock,
-          ...bookingData,
-          // Only include vehicleType for bookings that require vehicles
-          vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
-          status: 'confirmed',
-          createdAt: new Date().toISOString(),
-          notes: `${bookingData.notes ? bookingData.notes + ' - ' : ''}Day ${day + 1} of ${bookingConfig.days}`
-        };
-        
-        newBookings[dayBooking.id] = dayBooking;
-      }
-      
-      // Add all bookings at once
-      setBookings(prev => ({ ...prev, ...newBookings }));
-    } else {
-      // Single day booking
-      if (!isInstructorAvailable(selectedSlot.instructor, selectedSlot.date, blocks)) {
-        alert(`${selectedSlot.instructor} is already booked during some of the requested time`);
-        return;
-      }
-
-      const newBooking = {
-        id: Date.now().toString(),
-        ...selectedSlot,
-        ...bookingData,
-        // Only include vehicleType for bookings that require vehicles
-        vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
-        startBlock: startBlock,
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
-      };
-
-      setBookings(prev => ({ ...prev, [newBooking.id]: newBooking }));
-    }
-
-    setShowModal(false);
-    setSelectedSlot(null);
-  };
-
-  const updateBooking = (bookingData) => {
-    if (!editingBooking) return;
-
-    const bookingConfig = bookingTypes[bookingData.bookingType];
-    const startBlock = editingBooking.startBlock || 1;
-    const blocks = getBlocksSpanned(bookingData.startTime, bookingData.endTime, bookingData.duration, startBlock);
-
-    // For non-vehicle bookings, skip vehicle checks
-    if (bookingConfig.requiresVehicle) {
-      // Check vehicle availability
-      const hasVehicleConflict = blocks.some(block => {
-        const blockBookings = Object.values(bookings).filter(
-          b => b.date === selectedSlot.date && 
-               b.status !== 'cancelled' &&
-               b.id !== editingBooking.id &&
-               b.vehicleType === bookingData.vehicleType && // Only count bookings with the same vehicle type
-               getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
-        );
-        const vehicleCount = blockBookings.length;
-        
-        console.log(`Block ${block}: Found ${vehicleCount} ${bookingData.vehicleType} bookings, limit is ${vehicleLimits[bookingData.vehicleType]}`);
-        
-        return vehicleCount >= vehicleLimits[bookingData.vehicleType];
-      });
-
-      if (hasVehicleConflict) {
-        alert(`No ${bookingData.vehicleType} vehicles available for the requested time slots`);
-        return;
-      }
-    }
-
-    if (!canInstructorTeach(selectedSlot.instructor, bookingData.vehicleType, bookingData.bookingType)) {
-      const message = bookingConfig.requiresVehicle 
-        ? `${selectedSlot.instructor} cannot teach ${bookingData.vehicleType}`
-        : `${selectedSlot.instructor} is not qualified for ${bookingConfig.label}`;
-      alert(message);
-      return;
-    }
-
-    const updatedBooking = {
-      ...editingBooking,
-      ...selectedSlot,
-      ...bookingData,
-      // Only include vehicleType for bookings that require vehicles
-      vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
-      updatedAt: new Date().toISOString()
-    };
-
-    setBookings(prev => ({ ...prev, [editingBooking.id]: updatedBooking }));
-    setShowModal(false);
-    setEditingBooking(null);
-    setSelectedSlot(null);
-  };
-
-  const removeBooking = (bookingId) => {
-    setBookings(prev => {
-      const updated = { ...prev };
-      delete updated[bookingId];
-      return updated;
-    });
-    setShowDeleteConfirm(false);
-    setShowBookingDetails(false);
-    setEditingBooking(null);
-  };
-
-  const handleBookingClick = (booking, e) => {
-    e.stopPropagation();
-    setEditingBooking(booking);
-    setSelectedSlot({
-      instructor: booking.instructor,
-      date: booking.date
-    });
-    setShowBookingDetails(true);
-  };
-
-  const handleEmptyCellClick = (instructor, date, block) => {
-    // Check if instructor has any booking in this block
-    const existingBooking = getBookingForBlock(instructor, date, block);
-    if (existingBooking) return; // Block is occupied
-
-    setSelectedSlot({ instructor, date, block });
-    setEditingBooking(null);
-    setShowModal(true);
-  };
-
-  // Delete Confirmation Modal
-  const DeleteConfirmModal = () => {
-    if (!showDeleteConfirm || !editingBooking) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Booking</h3>
-          
-          <div className="space-y-4">
-            <p>Are you sure you want to delete this booking?</p>
+          const canInstructorTeach = (instructor, vehicleType, bookingType) => {
+            const bookingConfig = bookingTypes[bookingType];
             
-            <div className="bg-gray-50 p-3 rounded">
-              <div className="text-sm">
-                <div><strong>Customer:</strong> {editingBooking.customerName || 'N/A'}</div>
-                <div><strong>Date:</strong> {editingBooking.date}</div>
-                <div><strong>Time:</strong> {editingBooking.startTime} - {editingBooking.endTime}</div>
-                <div><strong>Instructor:</strong> {editingBooking.instructor}</div>
-              </div>
-            </div>
+            // Non-vehicle bookings have different requirements
+            if (!bookingConfig.requiresVehicle) {
+              if (bookingType === 'leave' || bookingType === 'admin') return true;
+              if (bookingType === 'ipaf' && !['DAVE J', 'NIGEL'].includes(instructor)) return false;
+              if (bookingType === 'forklift' && !['NIGEL', 'DEAN'].includes(instructor)) return false;
+              if (bookingType === 'adr' && !['CRAIG', 'JEFF', 'DAVE J'].includes(instructor)) return false;
+              return true;
+            }
+            
+            // Vehicle-based bookings
+            const qualifications = instructorQualifications[instructor] || [];
+            return qualifications.includes(vehicleType);
+          };
 
-            <div className="flex space-x-3">
-              <button
-                onClick={() => removeBooking(editingBooking.id)}
-                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
-              >
-                Yes, Delete
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+          // Get bookings for a specific instructor and block
+          const getBookingForBlock = (instructor, date, block) => {
+            return Object.values(bookings).find(booking => {
+              if (booking.instructor !== instructor || booking.date !== date) return false;
+              const startBlock = booking.startBlock || 1;
+              const blocks = getBlocksSpanned(booking.startTime, booking.endTime, booking.duration, startBlock);
+              return blocks.includes(block);
+            });
+          };
 
-  // Booking Details Modal
-  const BookingDetailsModal = () => {
-    if (!showBookingDetails || !editingBooking) return null;
+          // Helper function to get vehicle availability for a specific block
+          const getVehicleAvailability = (vehicleType, date, block) => {
+            const blockBookings = Object.values(bookings).filter(
+              b => b.date === date && 
+                   b.status !== 'cancelled' &&
+                   b.vehicleType === vehicleType &&
+                   getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
+            );
+            const used = blockBookings.length;
+            const total = vehicleLimits[vehicleType];
+            return { used, total, available: total - used };
+          };
 
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 className="text-lg font-semibold mb-4">Booking Details</h3>
-          
-          <div className="space-y-3">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><strong>Customer:</strong></div>
-                <div>{editingBooking.customerName || 'N/A'}</div>
+          // Navigation
+          const navigateDate = (direction) => {
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + direction);
+            setCurrentDate(newDate);
+          };
+
+          // Booking functions
+          const addBooking = (bookingData) => {
+            const bookingConfig = bookingTypes[bookingData.bookingType];
+            const startBlock = selectedSlot.block || 1; // Use the clicked block as starting point
+            const blocks = getBlocksSpanned(bookingData.startTime, bookingData.endTime, bookingData.duration, startBlock);
+            
+            // For non-vehicle bookings, skip vehicle checks
+            if (bookingConfig.requiresVehicle) {
+              // Check vehicle availability across all affected blocks
+              const hasVehicleConflict = blocks.some(block => {
+                const blockBookings = Object.values(bookings).filter(
+                  b => b.date === selectedSlot.date && 
+                       b.status !== 'cancelled' &&
+                       b.vehicleType === bookingData.vehicleType && // Only count bookings with the same vehicle type
+                       getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
+                );
+                const vehicleCount = blockBookings.length;
                 
-                <div><strong>Instructor:</strong></div>
-                <div>{editingBooking.instructor}</div>
+                console.log(`Block ${block}: Found ${vehicleCount} ${bookingData.vehicleType} bookings, limit is ${vehicleLimits[bookingData.vehicleType]}`);
                 
-                <div><strong>Date:</strong></div>
-                <div>{editingBooking.date}</div>
-                
-                <div><strong>Time:</strong></div>
-                <div>{editingBooking.startTime} - {editingBooking.endTime}</div>
-                
-                <div><strong>Duration:</strong></div>
-                <div>{editingBooking.duration} block(s)</div>
-                
-                {bookingTypes[editingBooking.bookingType]?.requiresVehicle && (
-                  <>
-                    <div><strong>Vehicle:</strong></div>
-                    <div>{editingBooking.vehicleType}</div>
-                  </>
-                )}
-                
-                <div><strong>Type:</strong></div>
-                <div>{bookingTypes[editingBooking.bookingType]?.label}</div>
-                
-                <div><strong>Status:</strong></div>
-                <div className={editingBooking.status === 'cancelled' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
-                  {bookingStatuses[editingBooking.status]?.label || 'Confirmed'}
-                </div>
-                
-                {bookingTypes[editingBooking.bookingType]?.requiresVehicle && (
-                  <>
-                    <div><strong>Payment:</strong></div>
-                    <div>
-                      {editingBooking.paymentStatus === 'deposit' && '✓ Deposit Paid'}
-                      {editingBooking.paymentStatus === 'full' && '✗ Paid in Full'}
-                      {editingBooking.paymentStatus === 'none' && 'No Payment'}
-                    </div>
-                  </>
-                )}
-              </div>
+                return vehicleCount >= vehicleLimits[bookingData.vehicleType];
+              });
+
+              if (hasVehicleConflict) {
+                alert(`No ${bookingData.vehicleType} vehicles available for the requested time slots`);
+                return;
+              }
+            }
+
+            if (!canInstructorTeach(selectedSlot.instructor, bookingData.vehicleType, bookingData.bookingType)) {
+              const message = bookingConfig.requiresVehicle 
+                ? `${selectedSlot.instructor} cannot teach ${bookingData.vehicleType}`
+                : `${selectedSlot.instructor} is not qualified for ${bookingConfig.label}`;
+              alert(message);
+              return;
+            }
+
+            // Handle multi-day bookings
+            if (bookingConfig.multiDay && bookingConfig.days) {
+              // For multi-day bookings like ADR (5 days)
+              const startDate = new Date(selectedSlot.date);
+              const newBookings = {};
               
-              {editingBooking.notes && (
-                <div className="mt-3 pt-3 border-t">
-                  <strong>Notes:</strong>
-                  <p className="text-sm mt-1">{editingBooking.notes}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => {
-                  setShowBookingDetails(false);
-                  setShowModal(true);
-                }}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
-              >
-                Edit Booking
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  setShowBookingDetails(false);
-                  setEditingBooking(null);
-                }}
-                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Booking Modal
-  const BookingModal = () => {
-    const getDefaultTimeForBlock = (blockNumber) => {
-      const block = timeBlocks.find(b => b.id === blockNumber);
-      return block ? { start: block.defaultStart, end: block.defaultEnd } : { start: '08:15', end: '09:45' };
-    };
-
-    const defaultTimes = selectedSlot?.block ? getDefaultTimeForBlock(selectedSlot.block) : { start: '08:15', end: '09:45' };
-
-    const [formData, setFormData] = useState({
-      customerName: editingBooking?.customerName || '',
-      vehicleType: editingBooking?.vehicleType || 'C+E',
-      bookingType: editingBooking?.bookingType || 'lesson',
-      paymentStatus: editingBooking?.paymentStatus || 'none',
-      status: editingBooking?.status || 'confirmed',
-      startTime: editingBooking?.startTime || defaultTimes.start,
-      endTime: editingBooking?.endTime || defaultTimes.end,
-      duration: editingBooking?.duration || 1,
-      notes: editingBooking?.notes || ''
-    });
-
-    React.useEffect(() => {
-      if (editingBooking) {
-        setFormData({
-          customerName: editingBooking.customerName || '',
-          vehicleType: editingBooking.vehicleType || 'C+E',
-          bookingType: editingBooking.bookingType || 'lesson',
-          paymentStatus: editingBooking.paymentStatus || 'none',
-          status: editingBooking.status || 'confirmed',
-          startTime: editingBooking.startTime || '08:15',
-          endTime: editingBooking.endTime || '09:45',
-          duration: editingBooking.duration || 1,
-          notes: editingBooking.notes || ''
-        });
-      } else if (selectedSlot?.block) {
-        const defaultTimes = getDefaultTimeForBlock(selectedSlot.block);
-        setFormData(prev => ({
-          ...prev,
-          startTime: defaultTimes.start,
-          endTime: defaultTimes.end
-        }));
-      }
-    }, [editingBooking, selectedSlot]);
-
-    if (!showModal || !selectedSlot) return null;
-
-    const handleSubmit = () => {
-      if (editingBooking) {
-        updateBooking(formData);
-      } else {
-        addBooking(formData);
-      }
-    };
-
-    const currentBookingType = bookingTypes[formData.bookingType];
-    const requiresVehicle = currentBookingType?.requiresVehicle || false;
-
-    const setTimePreset = (preset) => {
-      setFormData(prev => ({
-        ...prev,
-        startTime: preset.start,
-        endTime: preset.end
-      }));
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingBooking ? 'Edit Booking' : 'New Booking'}
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="text-sm bg-gray-50 p-3 rounded">
-              <div><strong>Instructor:</strong> {selectedSlot.instructor}</div>
-              <div><strong>Date:</strong> {selectedSlot.date}</div>
-              {selectedSlot.block && !editingBooking && (
-                <div><strong>Starting Block:</strong> Block {selectedSlot.block}</div>
-              )}
-              {currentBookingType?.multiDay && currentBookingType?.days && !editingBooking && (
-                <div className="text-amber-600 mt-1">
-                  ⚠️ This will create bookings for {currentBookingType.days} consecutive days
-                </div>
-              )}
-            </div>
-
-            <input
-              type="text"
-              placeholder={!requiresVehicle ? "Description (optional)" : "Customer Name"}
-              value={formData.customerName}
-              onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
-              className="w-full p-3 border rounded-lg"
-            />
-
-            <select
-              value={formData.bookingType}
-              onChange={(e) => {
-                const type = e.target.value;
-                const defaultDuration = bookingTypes[type]?.defaultDuration || 1;
-                setFormData(prev => ({ 
-                  ...prev, 
-                  bookingType: type,
-                  duration: defaultDuration
-                }));
-              }}
-              className="w-full p-3 border rounded-lg"
-            >
-              {Object.entries(bookingTypes).map(([type, config]) => (
-                <option key={type} value={type}>{config.label}</option>
-              ))}
-            </select>
-
-            {requiresVehicle && (
-              <>
-                <select
-                  value={formData.vehicleType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, vehicleType: e.target.value }))}
-                  className="w-full p-3 border rounded-lg"
-                >
-                  {Object.keys(vehicleLimits).map(vt => (
-                    <option key={vt} value={vt}>{vt}</option>
-                  ))}
-                </select>
+              for (let day = 0; day < bookingConfig.days; day++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + day);
+                const dateString = formatDate(currentDate);
                 
-                {/* Vehicle Availability Display */}
-                {selectedSlot.block && (
-                  <div className="bg-blue-50 p-3 rounded-lg text-sm">
-                    <div className="font-medium mb-2">Vehicle Availability for {formData.vehicleType}:</div>
-                    {[...Array(formData.duration)].map((_, i) => {
-                      const blockNum = (selectedSlot.block || 1) + i;
-                      if (blockNum > 4) return null;
-                      const availability = getVehicleAvailability(formData.vehicleType, selectedSlot.date, blockNum);
+                // Check instructor availability for each day
+                if (!isInstructorAvailable(selectedSlot.instructor, dateString, blocks)) {
+                  alert(`${selectedSlot.instructor} is not available on ${dateString}`);
+                  return;
+                }
+                
+                const dayBooking = {
+                  id: `${Date.now()}-day${day}`,
+                  instructor: selectedSlot.instructor,
+                  date: dateString,
+                  startBlock: startBlock,
+                  ...bookingData,
+                  // Only include vehicleType for bookings that require vehicles
+                  vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
+                  status: 'confirmed',
+                  createdAt: new Date().toISOString(),
+                  notes: `${bookingData.notes ? bookingData.notes + ' - ' : ''}Day ${day + 1} of ${bookingConfig.days}`
+                };
+                
+                newBookings[dayBooking.id] = dayBooking;
+              }
+              
+              // Add all bookings at once
+              setBookings(prev => ({ ...prev, ...newBookings }));
+            } else {
+              // Single day booking
+              if (!isInstructorAvailable(selectedSlot.instructor, selectedSlot.date, blocks)) {
+                alert(`${selectedSlot.instructor} is already booked during some of the requested time`);
+                return;
+              }
+
+              const newBooking = {
+                id: Date.now().toString(),
+                ...selectedSlot,
+                ...bookingData,
+                // Only include vehicleType for bookings that require vehicles
+                vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
+                startBlock: startBlock,
+                status: 'confirmed',
+                createdAt: new Date().toISOString()
+              };
+
+              setBookings(prev => ({ ...prev, [newBooking.id]: newBooking }));
+            }
+
+            setShowModal(false);
+            setSelectedSlot(null);
+          };
+
+          const updateBooking = (bookingData) => {
+            if (!editingBooking) return;
+
+            const bookingConfig = bookingTypes[bookingData.bookingType];
+            const startBlock = editingBooking.startBlock || 1;
+            const blocks = getBlocksSpanned(bookingData.startTime, bookingData.endTime, bookingData.duration, startBlock);
+
+            // For non-vehicle bookings, skip vehicle checks
+            if (bookingConfig.requiresVehicle) {
+              // Check vehicle availability
+              const hasVehicleConflict = blocks.some(block => {
+                const blockBookings = Object.values(bookings).filter(
+                  b => b.date === selectedSlot.date && 
+                       b.status !== 'cancelled' &&
+                       b.id !== editingBooking.id &&
+                       b.vehicleType === bookingData.vehicleType && // Only count bookings with the same vehicle type
+                       getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
+                );
+                const vehicleCount = blockBookings.length;
+                
+                console.log(`Block ${block}: Found ${vehicleCount} ${bookingData.vehicleType} bookings, limit is ${vehicleLimits[bookingData.vehicleType]}`);
+                
+                return vehicleCount >= vehicleLimits[bookingData.vehicleType];
+              });
+
+              if (hasVehicleConflict) {
+                alert(`No ${bookingData.vehicleType} vehicles available for the requested time slots`);
+                return;
+              }
+            }
+
+            if (!canInstructorTeach(selectedSlot.instructor, bookingData.vehicleType, bookingData.bookingType)) {
+              const message = bookingConfig.requiresVehicle 
+                ? `${selectedSlot.instructor} cannot teach ${bookingData.vehicleType}`
+                : `${selectedSlot.instructor} is not qualified for ${bookingConfig.label}`;
+              alert(message);
+              return;
+            }
+
+            const updatedBooking = {
+              ...editingBooking,
+              ...selectedSlot,
+              ...bookingData,
+              // Only include vehicleType for bookings that require vehicles
+              vehicleType: bookingConfig.requiresVehicle ? bookingData.vehicleType : undefined,
+              updatedAt: new Date().toISOString()
+            };
+
+            setBookings(prev => ({ ...prev, [editingBooking.id]: updatedBooking }));
+            setShowModal(false);
+            setEditingBooking(null);
+            setSelectedSlot(null);
+          };
+
+          const removeBooking = (bookingId) => {
+            setBookings(prev => {
+              const updated = { ...prev };
+              delete updated[bookingId];
+              return updated;
+            });
+            setShowDeleteConfirm(false);
+            setShowBookingDetails(false);
+            setEditingBooking(null);
+          };
+
+          const handleBookingClick = (booking, e) => {
+            e.stopPropagation();
+            setEditingBooking(booking);
+            setSelectedSlot({
+              instructor: booking.instructor,
+              date: booking.date
+            });
+            setShowBookingDetails(true);
+          };
+
+          const handleEmptyCellClick = (instructor, date, block) => {
+            // Check if instructor has any booking in this block
+            const existingBooking = getBookingForBlock(instructor, date, block);
+            if (existingBooking) return; // Block is occupied
+
+            setSelectedSlot({ instructor, date, block });
+            setEditingBooking(null);
+            setShowModal(true);
+          };
+
+          // Delete Confirmation Modal
+          const DeleteConfirmModal = () => {
+            if (!showDeleteConfirm || !editingBooking) return null;
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                  <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Booking</h3>
+                  
+                  <div className="space-y-4">
+                    <p>Are you sure you want to delete this booking?</p>
+                    
+                    <div className="bg-gray-50 p-3 rounded">
+                      <div className="text-sm">
+                        <div><strong>Customer:</strong> {editingBooking.customerName || 'N/A'}</div>
+                        <div><strong>Date:</strong> {editingBooking.date}</div>
+                        <div><strong>Time:</strong> {editingBooking.startTime} - {editingBooking.endTime}</div>
+                        <div><strong>Instructor:</strong> {editingBooking.instructor}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => removeBooking(editingBooking.id)}
+                        className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
+                      >
+                        Yes, Delete
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          // Booking Details Modal
+          const BookingDetailsModal = () => {
+            if (!showBookingDetails || !editingBooking) return null;
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                  <h3 className="text-lg font-semibold mb-4">Booking Details</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div><strong>Customer:</strong></div>
+                        <div>{editingBooking.customerName || 'N/A'}</div>
+                        
+                        <div><strong>Instructor:</strong></div>
+                        <div>{editingBooking.instructor}</div>
+                        
+                        <div><strong>Date:</strong></div>
+                        <div>{editingBooking.date}</div>
+                        
+                        <div><strong>Time:</strong></div>
+                        <div>{editingBooking.startTime} - {editingBooking.endTime}</div>
+                        
+                        <div><strong>Duration:</strong></div>
+                        <div>{editingBooking.duration} block(s)</div>
+                        
+                        {bookingTypes[editingBooking.bookingType]?.requiresVehicle && (
+                          <>
+                            <div><strong>Vehicle:</strong></div>
+                            <div>{editingBooking.vehicleType}</div>
+                          </>
+                        )}
+                        
+                        <div><strong>Type:</strong></div>
+                        <div>{bookingTypes[editingBooking.bookingType]?.label}</div>
+                        
+                        <div><strong>Status:</strong></div>
+                        <div className={editingBooking.status === 'cancelled' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                          {bookingStatuses[editingBooking.status]?.label || 'Confirmed'}
+                        </div>
+                        
+                        {bookingTypes[editingBooking.bookingType]?.requiresVehicle && (
+                          <>
+                            <div><strong>Payment:</strong></div>
+                            <div>
+                              {editingBooking.paymentStatus === 'deposit' && '✓ Deposit Paid'}
+                              {editingBooking.paymentStatus === 'full' && '✗ Paid in Full'}
+                              {editingBooking.paymentStatus === 'none' && 'No Payment'}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
+                      {editingBooking.notes && (
+                        <div className="mt-3 pt-3 border-t">
+                          <strong>Notes:</strong>
+                          <p className="text-sm mt-1">{editingBooking.notes}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowBookingDetails(false);
+                          setShowModal(true);
+                        }}
+                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
+                      >
+                        Edit Booking
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowBookingDetails(false);
+                          setEditingBooking(null);
+                        }}
+                        className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          // Booking Modal
+          const BookingModal = () => {
+            const getDefaultTimeForBlock = (blockNumber) => {
+              const block = timeBlocks.find(b => b.id === blockNumber);
+              return block ? { start: block.defaultStart, end: block.defaultEnd } : { start: '08:15', end: '09:45' };
+            };
+
+            const defaultTimes = selectedSlot?.block ? getDefaultTimeForBlock(selectedSlot.block) : { start: '08:15', end: '09:45' };
+
+            const [formData, setFormData] = React.useState({
+              customerName: editingBooking?.customerName || '',
+              vehicleType: editingBooking?.vehicleType || 'C+E',
+              bookingType: editingBooking?.bookingType || 'lesson',
+              paymentStatus: editingBooking?.paymentStatus || 'none',
+              status: editingBooking?.status || 'confirmed',
+              startTime: editingBooking?.startTime || defaultTimes.start,
+              endTime: editingBooking?.endTime || defaultTimes.end,
+              duration: editingBooking?.duration || 1,
+              notes: editingBooking?.notes || ''
+            });
+
+            React.useEffect(() => {
+              if (editingBooking) {
+                setFormData({
+                  customerName: editingBooking.customerName || '',
+                  vehicleType: editingBooking.vehicleType || 'C+E',
+                  bookingType: editingBooking.bookingType || 'lesson',
+                  paymentStatus: editingBooking.paymentStatus || 'none',
+                  status: editingBooking.status || 'confirmed',
+                  startTime: editingBooking.startTime || '08:15',
+                  endTime: editingBooking.endTime || '09:45',
+                  duration: editingBooking.duration || 1,
+                  notes: editingBooking.notes || ''
+                });
+              } else if (selectedSlot?.block) {
+                const defaultTimes = getDefaultTimeForBlock(selectedSlot.block);
+                setFormData(prev => ({
+                  ...prev,
+                  startTime: defaultTimes.start,
+                  endTime: defaultTimes.end
+                }));
+              }
+            }, [editingBooking, selectedSlot]);
+
+            if (!showModal || !selectedSlot) return null;
+
+            const handleSubmit = () => {
+              if (editingBooking) {
+                updateBooking(formData);
+              } else {
+                addBooking(formData);
+              }
+            };
+
+            const currentBookingType = bookingTypes[formData.bookingType];
+            const requiresVehicle = currentBookingType?.requiresVehicle || false;
+
+            const setTimePreset = (preset) => {
+              setFormData(prev => ({
+                ...prev,
+                startTime: preset.start,
+                endTime: preset.end
+              }));
+            };
+
+            return (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                  <h3 className="text-lg font-semibold mb-4">
+                    {editingBooking ? 'Edit Booking' : 'New Booking'}
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="text-sm bg-gray-50 p-3 rounded">
+                      <div><strong>Instructor:</strong> {selectedSlot.instructor}</div>
+                      <div><strong>Date:</strong> {selectedSlot.date}</div>
+                      {selectedSlot.block && !editingBooking && (
+                        <div><strong>Starting Block:</strong> Block {selectedSlot.block}</div>
+                      )}
+                      {currentBookingType?.multiDay && currentBookingType?.days && !editingBooking && (
+                        <div className="text-amber-600 mt-1">
+                          ⚠️ This will create bookings for {currentBookingType.days} consecutive days
+                        </div>
+                      )}
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder={!requiresVehicle ? "Description (optional)" : "Customer Name"}
+                      value={formData.customerName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                      className="w-full p-3 border rounded-lg"
+                    />
+
+                    <select
+                      value={formData.bookingType}
+                      onChange={(e) => {
+                        const type = e.target.value;
+                        const defaultDuration = bookingTypes[type]?.defaultDuration || 1;
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          bookingType: type,
+                          duration: defaultDuration
+                        }));
+                      }}
+                      className="w-full p-3 border rounded-lg"
+                    >
+                      {Object.entries(bookingTypes).map(([type, config]) => (
+                        <option key={type} value={type}>{config.label}</option>
+                      ))}
+                    </select>
+
+                    {requiresVehicle && (
+                      <>
+                        <select
+                          value={formData.vehicleType}
+                          onChange={(e) => setFormData(prev => ({ ...prev, vehicleType: e.target.value }))}
+                          className="w-full p-3 border rounded-lg"
+                        >
+                          {Object.keys(vehicleLimits).map(vt => (
+                            <option key={vt} value={vt}>{vt}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Vehicle Availability Display */}
+                        {selectedSlot.block && (
+                          <div className="bg-blue-50 p-3 rounded-lg text-sm">
+                            <div className="font-medium mb-2">Vehicle Availability for {formData.vehicleType}:</div>
+                            {[...Array(formData.duration)].map((_, i) => {
+                              const blockNum = (selectedSlot.block || 1) + i;
+                              if (blockNum > 4) return null;
+                              const availability = getVehicleAvailability(formData.vehicleType, selectedSlot.date, blockNum);
+                              return (
+                                <div key={blockNum} className="flex justify-between">
+                                  <span>Block {blockNum}:</span>
+                                  <span className={availability.available > 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {availability.used}/{availability.total} used ({availability.available} available)
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          value={formData.startTime}
+                          onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                          className="w-full p-3 border rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">End Time</label>
+                        <input
+                          type="time"
+                          value={formData.endTime}
+                          onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                          className="w-full p-3 border rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Time Presets</label>
+                      <div className="flex flex-wrap gap-2">
+                        {timePresets.lesson.map((preset, i) => (
+                          <button
+                            key={`lesson-${i}`}
+                            type="button"
+                            onClick={() => setTimePreset(preset)}
+                            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            Lesson {preset.start}-{preset.end}
+                          </button>
+                        ))}
+                        {timePresets.assessment.map((preset, i) => (
+                          <button
+                            key={`assess-${i}`}
+                            type="button"
+                            onClick={() => setTimePreset(preset)}
+                            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                          >
+                            Test {preset.start}-{preset.end}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setTimePreset(timePresets.course[0])}
+                          className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+                        >
+                          Full Day 08:00-16:00
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Duration (blocks)
+                        {selectedSlot.block && ` - Starting from Block ${selectedSlot.block}`}
+                      </label>
+                      <select
+                        value={formData.duration}
+                        onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                        className="w-full p-3 border rounded-lg"
+                      >
+                        {[1, 2, 3, 4].map(num => {
+                          const endBlock = (selectedSlot.block || 1) + num - 1;
+                          const isValid = endBlock <= 4;
+                          return (
+                            <option key={num} value={num} disabled={!isValid}>
+                              {num} block{num > 1 ? 's' : ''} 
+                              {selectedSlot.block && ` (Block ${selectedSlot.block} to Block ${Math.min(endBlock, 4)})`}
+                              {!isValid && ' - Exceeds day limit'}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+                      className="w-full p-3 border rounded-lg"
+                    >
+                      {Object.entries(bookingStatuses).map(([status, config]) => (
+                        <option key={status} value={status}>{config.label}</option>
+                      ))}
+                    </select>
+
+                    {requiresVehicle && (
+                      <select
+                        value={formData.paymentStatus}
+                        onChange={(e) => setFormData(prev => ({ ...prev, paymentStatus: e.target.value }))}
+                        className="w-full p-3 border rounded-lg"
+                      >
+                        <option value="none">No Payment</option>
+                        <option value="deposit">✓ Deposit Paid</option>
+                        <option value="full">✗ Paid in Full</option>
+                      </select>
+                    )}
+
+                    <textarea
+                      placeholder={currentBookingType?.multiDay ? "Notes (will be added to each day)" : "Notes (e.g., CE course day 2 of 4, special requirements, etc.)"}
+                      value={formData.notes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      className="w-full p-3 border rounded-lg"
+                      rows={3}
+                    />
+
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={requiresVehicle && !formData.customerName}
+                        className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {editingBooking ? 'Update Booking' : 'Add Booking'}
+                      </button>
+                      <button
+                        onClick={() => { 
+                          setShowModal(false); 
+                          setSelectedSlot(null); 
+                          setEditingBooking(null);
+                        }}
+                        className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          const instructors = Object.keys(instructorQualifications);
+
+          return (
+            <div className="min-h-screen bg-gray-50 p-4">
+              {/* Header */}
+              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-2xl font-bold text-gray-900">Lancaster Training Services Booking System</h1>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => navigateDate(-1)}
+                      className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center space-x-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Previous Day</span>
+                    </button>
+                    <span className="font-medium text-lg">
+                      {currentDate.toLocaleDateString('en-GB', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </span>
+                    <button
+                      onClick={() => navigateDate(1)}
+                      className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center space-x-2"
+                    >
+                      <span>Next Day</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Fleet Overview with current availability */}
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium mb-2">Fleet Status for {getDateString()}:</h3>
+                  <div className="grid grid-cols-4 gap-4 text-sm">
+                    {Object.entries(vehicleLimits).map(([vehicle, limit]) => {
+                      // Count total vehicles in use across all blocks for the day
+                      const vehiclesInUse = new Set();
+                      [1, 2, 3, 4].forEach(block => {
+                        const blockBookings = Object.values(bookings).filter(
+                          b => b.date === getDateString() && 
+                               b.status !== 'cancelled' &&
+                               b.vehicleType === vehicle &&
+                               getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
+                        );
+                        blockBookings.forEach(b => vehiclesInUse.add(`${b.id}-${block}`));
+                      });
+                      
                       return (
-                        <div key={blockNum} className="flex justify-between">
-                          <span>Block {blockNum}:</span>
-                          <span className={availability.available > 0 ? 'text-green-600' : 'text-red-600'}>
-                            {availability.used}/{availability.total} used ({availability.available} available)
-                          </span>
+                        <div key={vehicle} className="flex items-center space-x-2">
+                          <Car className="w-4 h-4 text-blue-600" />
+                          <span>{vehicle}: {limit} total</span>
                         </div>
                       );
                     })}
                   </div>
-                )}
-              </>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Start Time</label>
-                <input
-                  type="time"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-                  className="w-full p-3 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">End Time</label>
-                <input
-                  type="time"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                  className="w-full p-3 border rounded-lg"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Time Presets</label>
-              <div className="flex flex-wrap gap-2">
-                {timePresets.lesson.map((preset, i) => (
-                  <button
-                    key={`lesson-${i}`}
-                    type="button"
-                    onClick={() => setTimePreset(preset)}
-                    className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                  >
-                    Lesson {preset.start}-{preset.end}
-                  </button>
-                ))}
-                {timePresets.assessment.map((preset, i) => (
-                  <button
-                    key={`assess-${i}`}
-                    type="button"
-                    onClick={() => setTimePreset(preset)}
-                    className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                  >
-                    Test {preset.start}-{preset.end}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setTimePreset(timePresets.course[0])}
-                  className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
-                >
-                  Full Day 08:00-16:00
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Duration (blocks)
-                {selectedSlot.block && ` - Starting from Block ${selectedSlot.block}`}
-              </label>
-              <select
-                value={formData.duration}
-                onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-                className="w-full p-3 border rounded-lg"
-              >
-                {[1, 2, 3, 4].map(num => {
-                  const endBlock = (selectedSlot.block || 1) + num - 1;
-                  const isValid = endBlock <= 4;
-                  return (
-                    <option key={num} value={num} disabled={!isValid}>
-                      {num} block{num > 1 ? 's' : ''} 
-                      {selectedSlot.block && ` (Block ${selectedSlot.block} to Block ${Math.min(endBlock, 4)})`}
-                      {!isValid && ' - Exceeds day limit'}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-              className="w-full p-3 border rounded-lg"
-            >
-              {Object.entries(bookingStatuses).map(([status, config]) => (
-                <option key={status} value={status}>{config.label}</option>
-              ))}
-            </select>
-
-            {requiresVehicle && (
-              <select
-                value={formData.paymentStatus}
-                onChange={(e) => setFormData(prev => ({ ...prev, paymentStatus: e.target.value }))}
-                className="w-full p-3 border rounded-lg"
-              >
-                <option value="none">No Payment</option>
-                <option value="deposit">✓ Deposit Paid</option>
-                <option value="full">✗ Paid in Full</option>
-              </select>
-            )}
-
-            <textarea
-              placeholder={currentBookingType?.multiDay ? "Notes (will be added to each day)" : "Notes (e.g., CE course day 2 of 4, special requirements, etc.)"}
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              className="w-full p-3 border rounded-lg"
-              rows={3}
-            />
-
-            <div className="flex space-x-3">
-              <button
-                onClick={handleSubmit}
-                disabled={requiresVehicle && !formData.customerName}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {editingBooking ? 'Update Booking' : 'Add Booking'}
-              </button>
-              <button
-                onClick={() => { 
-                  setShowModal(false); 
-                  setSelectedSlot(null); 
-                  setEditingBooking(null);
-                }}
-                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const instructors = Object.keys(instructorQualifications);
-
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Lancaster Training Services Booking System</h1>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigateDate(-1)}
-              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center space-x-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Previous Day</span>
-            </button>
-            <span className="font-medium text-lg">
-              {currentDate.toLocaleDateString('en-GB', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </span>
-            <button
-              onClick={() => navigateDate(1)}
-              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 flex items-center space-x-2"
-            >
-              <span>Next Day</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        // Fleet Overview with current availability
-        <div className="mt-4">
-          <h3 className="text-sm font-medium mb-2">Fleet Status for {getDateString()}:</h3>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            {Object.entries(vehicleLimits).map(([vehicle, limit]) => {
-              // Count total vehicles in use across all blocks for the day
-              const vehiclesInUse = new Set();
-              [1, 2, 3, 4].forEach(block => {
-                const blockBookings = Object.values(bookings).filter(
-                  b => b.date === getDateString() && 
-                       b.status !== 'cancelled' &&
-                       b.vehicleType === vehicle &&
-                       getBlocksSpanned(b.startTime, b.endTime, b.duration, b.startBlock || 1).includes(block)
-                );
-                blockBookings.forEach(b => vehiclesInUse.add(`${b.id}-${block}`));
-              });
-              
-              return (
-                <div key={vehicle} className="flex items-center space-x-2">
-                  <Car className="w-4 h-4 text-blue-600" />
-                  <span>{vehicle}: {limit} total</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <h3 className="font-semibold mb-3">Color Coding & Features</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
-            <span>Artics (C+E)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
-            <span>Rigids (C)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-            <span>Cars (B)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
-            <span>Everything Else</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Deposit</span>
-            <span className="text-green-600 font-bold">✗</span>
-            <span>Paid Full</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Daily Grid */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        {/* Header with time blocks */}
-        <div className="grid grid-cols-5 bg-gray-100 border-b">
-          <div className="p-4 font-semibold">Instructor</div>
-          {timeBlocks.map(block => (
-            <div key={block.id} className="p-4 text-center">
-              <div className="font-semibold">{block.label}</div>
-              <div className="text-xs text-gray-600">
-                {block.defaultStart} - {block.defaultEnd}
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Instructor Rows */}
-        {instructors.map(instructor => (
-          <div key={instructor} className="grid grid-cols-5 border-b">
-            <div className="p-4 bg-gray-50 font-medium text-sm border-r">
-              {instructor}
-            </div>
-            {timeBlocks.map(block => {
-              const booking = getBookingForBlock(instructor, getDateString(), block.id);
-              const isOccupied = !!booking;
-              
-              return (
-                <div
-                  key={block.id}
-                  className="p-2 min-h-[120px] border-r cursor-pointer hover:bg-gray-50 relative"
-                  onClick={() => !isOccupied && handleEmptyCellClick(instructor, getDateString(), block.id)}
-                >
-                  {isOccupied ? (
-                    <div
-                      onClick={(e) => handleBookingClick(booking, e)}
-                      className={`h-full p-2 rounded border cursor-pointer hover:shadow-md transition-shadow ${
-                        booking.status === 'cancelled' 
-                          ? bookingStatuses.cancelled.color
-                          : !bookingTypes[booking.bookingType]?.requiresVehicle
-                            ? bookingTypes[booking.bookingType]?.color || ''
-                            : `${getVehicleColor(booking.vehicleType)} ${bookingTypes[booking.bookingType]?.color || ''}`
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="text-xs font-medium">
-                          {booking.customerName || bookingTypes[booking.bookingType]?.label}
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          {bookingTypes[booking.bookingType]?.requiresVehicle && booking.status !== 'cancelled' && (
-                            <>
-                              {booking.paymentStatus === 'deposit' && <span className="text-green-600 text-xs">✓</span>}
-                              {booking.paymentStatus === 'full' && <span className="text-green-600 text-xs">✗</span>}
-                            </>
+              {/* Legend */}
+              <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <h3 className="font-semibold mb-3">Color Coding & Features</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
+                    <span>Artics (C+E)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+                    <span>Rigids (C)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+                    <span>Cars (B)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded"></div>
+                    <span>Everything Else</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span>Deposit</span>
+                    <span className="text-green-600 font-bold">✗</span>
+                    <span>Paid Full</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Daily Grid */}
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                {/* Header with time blocks */}
+                <div className="grid grid-cols-5 bg-gray-100 border-b">
+                  <div className="p-4 font-semibold">Instructor</div>
+                  {timeBlocks.map(block => (
+                    <div key={block.id} className="p-4 text-center">
+                      <div className="font-semibold">{block.label}</div>
+                      <div className="text-xs text-gray-600">
+                        {block.defaultStart} - {block.defaultEnd}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Instructor Rows */}
+                {instructors.map(instructor => (
+                  <div key={instructor} className="grid grid-cols-5 border-b">
+                    <div className="p-4 bg-gray-50 font-medium text-sm border-r">
+                      {instructor}
+                    </div>
+                    {timeBlocks.map(block => {
+                      const booking = getBookingForBlock(instructor, getDateString(), block.id);
+                      const isOccupied = !!booking;
+                      
+                      return (
+                        <div
+                          key={block.id}
+                          className="p-2 min-h-[120px] border-r cursor-pointer hover:bg-gray-50 relative"
+                          onClick={() => !isOccupied && handleEmptyCellClick(instructor, getDateString(), block.id)}
+                        >
+                          {isOccupied ? (
+                            <div
+                              onClick={(e) => handleBookingClick(booking, e)}
+                              className={`h-full p-2 rounded border cursor-pointer hover:shadow-md transition-shadow ${
+                                booking.status === 'cancelled' 
+                                  ? bookingStatuses.cancelled.color
+                                  : !bookingTypes[booking.bookingType]?.requiresVehicle
+                                    ? bookingTypes[booking.bookingType]?.color || ''
+                                    : `${getVehicleColor(booking.vehicleType)} ${bookingTypes[booking.bookingType]?.color || ''}`
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-1">
+                                <div className="text-xs font-medium">
+                                  {booking.customerName || bookingTypes[booking.bookingType]?.label}
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {bookingTypes[booking.bookingType]?.requiresVehicle && booking.status !== 'cancelled' && (
+                                    <>
+                                      {booking.paymentStatus === 'deposit' && <span className="text-green-600 text-xs">✓</span>}
+                                      {booking.paymentStatus === 'full' && <span className="text-green-600 text-xs">✗</span>}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="text-xs space-y-1">
+                                <div className="font-medium">{booking.startTime} - {booking.endTime}</div>
+                                {bookingTypes[booking.bookingType]?.requiresVehicle && (
+                                  <div>{booking.vehicleType}</div>
+                                )}
+                                <div className="opacity-75">{bookingTypes[booking.bookingType]?.label}</div>
+                                {booking.duration > 1 && (
+                                  <div className="text-xs bg-white bg-opacity-50 px-1 rounded">
+                                    {booking.duration} blocks
+                                    {booking.startBlock && booking.startBlock > 1 && ` (from Block ${booking.startBlock})`}
+                                  </div>
+                                )}
+                                {booking.notes && (
+                                  <div className="text-xs opacity-60 truncate">
+                                    {booking.notes}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-gray-400">
+                              <Plus className="w-5 h-5" />
+                            </div>
                           )}
                         </div>
-                      </div>
-                      
-                      <div className="text-xs space-y-1">
-                        <div className="font-medium">{booking.startTime} - {booking.endTime}</div>
-                        {bookingTypes[booking.bookingType]?.requiresVehicle && (
-                          <div>{booking.vehicleType}</div>
-                        )}
-                        <div className="opacity-75">{bookingTypes[booking.bookingType]?.label}</div>
-                        {booking.duration > 1 && (
-                          <div className="text-xs bg-white bg-opacity-50 px-1 rounded">
-                            {booking.duration} blocks
-                            {booking.startBlock && booking.startBlock > 1 && ` (from Block ${booking.startBlock})`}
-                          </div>
-                        )}
-                        {booking.notes && (
-                          <div className="text-xs opacity-60 truncate">
-                            {booking.notes}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      <Plus className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
 
-      <BookingDetailsModal />
-      <BookingModal />
-      <DeleteConfirmModal />
-    </div>
-  );
-};
+              <BookingDetailsModal />
+              <BookingModal />
+              <DeleteConfirmModal />
+            </div>
+          );
+        };
 
-export default BookingSystem;
+        ReactDOM.render(<BookingSystem />, document.getElementById('root'));
+    </script>
+</body>
+</html>
