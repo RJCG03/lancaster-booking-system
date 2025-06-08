@@ -111,6 +111,18 @@
             instructors.reduce((acc, instructor) => ({ ...acc, [instructor]: true }), {})
           );
 
+          // Close filter when clicking outside
+          React.useEffect(() => {
+            const handleClickOutside = (event) => {
+              if (showInstructorFilter && !event.target.closest('.instructor-filter-container')) {
+                setShowInstructorFilter(false);
+              }
+            };
+
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+          }, [showInstructorFilter]);
+
           // Helper functions
           const formatDate = (date) => {
             return date.toISOString().split('T')[0];
@@ -277,7 +289,7 @@
             const visibleCount = Object.values(visibleInstructors).filter(v => v).length;
             
             return (
-              <div className="absolute top-16 left-4 bg-white rounded-lg shadow-xl p-4 z-50 border w-64">
+              <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl p-4 z-50 border w-64">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Filter Instructors</h3>
                   <button
@@ -1011,16 +1023,7 @@
               {/* Header */}
               <div className="bg-white rounded-lg shadow-sm p-6 mb-6 relative">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <h1 className="text-2xl font-bold text-gray-900">Lancaster Training Services</h1>
-                    <button
-                      onClick={() => setShowInstructorFilter(!showInstructorFilter)}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center space-x-1"
-                    >
-                      <Filter />
-                      <span className="text-sm">Filter ({filteredInstructors.length}/{instructors.length})</span>
-                    </button>
-                  </div>
+                  <h1 className="text-2xl font-bold text-gray-900">Lancaster Training Services Booking System</h1>
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => navigateDate(-1)}
@@ -1082,7 +1085,6 @@
                 </div>
                 
                 <CalendarModal />
-                <InstructorFilterModal />
               </div>
 
               {/* Legend */}
@@ -1115,10 +1117,20 @@
               </div>
 
               {/* Main Daily Grid */}
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className={`bg-white rounded-lg shadow-sm ${showInstructorFilter ? 'relative z-10' : 'overflow-hidden'}`}>
                 {/* Header with time blocks */}
                 <div className="grid grid-cols-5 bg-gray-100 border-b">
-                  <div className="p-4 font-semibold">Instructor</div>
+                  <div className="p-4 font-semibold relative flex items-center justify-between instructor-filter-container">
+                    <span>Instructor</span>
+                    <button
+                      onClick={() => setShowInstructorFilter(!showInstructorFilter)}
+                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center space-x-1"
+                    >
+                      <Filter />
+                      <span className="text-xs">({filteredInstructors.length}/{instructors.length})</span>
+                    </button>
+                    {showInstructorFilter && <InstructorFilterModal />}
+                  </div>
                   {timeBlocks.map(block => (
                     <div key={block.id} className="p-4 text-center">
                       <div className="font-semibold">{block.label}</div>
